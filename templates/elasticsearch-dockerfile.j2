@@ -1,0 +1,31 @@
+# DOCKER-VERSION 1.0.1
+# VERSION 0.5
+# mesos-master
+FROM debian:jessie
+MAINTAINER Pablo Torres <pablo.torres.t@gmail.com>
+
+RUN echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee /etc/apt/sources.list.d/webupd8team-java.list
+RUN echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
+RUN apt-get update
+RUN echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections
+RUN echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections
+
+RUN apt-get install oracle-java7-installer oracle-java7-set-default -y
+RUN rm -rf /var/cache/oracle-jdk7-installer
+RUN apt-get clean
+
+#RUN wget -qO - https://packages.elasticsearch.org/GPG-KEY-elasticsearch | apt-key add -
+#RUN echo "deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main" | tee /etc/apt/sources.list.d/elasticsearch.list
+#RUN apt-get update
+#RUN apt-get install elasticsearch -y
+
+ENV ES_URL https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.4.2.tar.gz
+ENV ES_HOME /opt/elasticsearch
+RUN (cd /tmp && wget $ES_URL -O pkg.tar.gz && tar zxf pkg.tar.gz && mv elasticsearch-* $ES_HOME)
+RUN rm -rf /tmp/*
+
+EXPOSE 9200 9300
+
+CMD ["/opt/elasticsearch/bin/elasticsearch","--cluster.name=production"]
+

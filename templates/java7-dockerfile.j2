@@ -1,0 +1,9 @@
+# DOCKER-VERSION 1.0.1
+# VERSION 0.5
+# mesos-master
+FROM debian:jessie
+MAINTAINER Pablo Torres <pablo.torres.t@gmail.com>
+
+RUN add-apt-repository ppa:webupd8team/java
+RUN apt-get update
+RUN apt-get install oracle-java7-installer

@@ -1,0 +1,11 @@
+[Unit]
+Description=Elasticsearch service
+
+[Service]
+EnvironmentFile=/etc/environment
+ExecStart=/bin/bash -c "/usr/bin/docker run --rm --net=\"host\" --name elasticsearch -p 9200:9200 -p 9300:9300 {{ elasticsearch_image_name }} /opt/elasticsearch/bin/elasticsearch --network.host=`hostname`"
+ExecStop=/usr/bin/docker stop elasticsearch
+ExecStopPost=/usr/bin/docker rm -f elasticsearch
+
+[X-Fleet]
+Conflicts=elasticsearch.*.service

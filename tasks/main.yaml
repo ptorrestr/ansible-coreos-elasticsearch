@@ -1,0 +1,52 @@
+---
+# Create docker directory
+- name: Create docker directory
+  file: path={{ playbook_dir }}/docker/docker-elasticsearch state=directory
+  tags:
+    - configuration
+
+# Create docker file
+- name: Create Elasticsearch Dockerfile
+  template: src=elasticsearch-dockerfile.j2 dest={{ playbook_dir }}/docker/docker-elasticsearch/Dockerfile
+  tags:
+    - configuration
+
+- name: Build Elasticsearch image
+  docker_image: docker_url=tcp://127.0.0.1:2375 path="{{ playbook_dir }}/docker/docker-elasticsearch" name="{{ elasticsearch_image_name }}" state="build"
+  tags:
+    - docker
+    - docker_build
+
+- name: Push Elasticsearch image to repo
+  shell: "docker push {{ elasticsearch_image_name }}"
+  tags:
+    - docker
+    - docker_push
+
+- name: Create Units directory
+  file: path={{ playbook_dir }}/units state=directory
+  tags:
+    - configuration
+
+- name: Create Elasticsearch Units
+  template: src=elasticsearch.x.service.j2 dest={{ playbook_dir }}/units/elasticsearch.{{ item }}.service
+  with_sequence: count={{ elasticsearch_instances_number }}
+  tags:
+    - configuration
+
+# Submit Units
+- name: Submit Elasticsearch units
+  shell: fleetctl --tunnel {{ fleet_endpoint }} submit {{ playbook_dir }}/units/elasticsearch.{{ item }}.service
+  with_sequence: count={{ elasticsearch_instances_number }}
+  tags:
+    - fleet
+    - fleet_submit
+
+# Start Units
+- name: Start Elasticsearch units
+  shell: sleep 5 && fleetctl --tunnel {{ fleet_endpoint }} start {{ playbook_dir }}units/elasticsearch.{{ item }}.service
+  with_sequence: count={{ elasticsearch_instances_number }}
+  tags:
+    - fleet
+    - fleet_start
+
